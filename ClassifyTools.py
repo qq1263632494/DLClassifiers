@@ -6,9 +6,7 @@ from ProgressBar import ShowProcess
 
 class Classifier:
     def __init__(self, nn=None):
-        # print(nn)
         self.nn = nn.cuda()
-        # self.nn = nn
 
     def fit(self, train_set, batch_size, optim, loss_func, epoch, lr):
         global optimizer
@@ -86,7 +84,7 @@ class Classifier:
         list_x = []
         list_y = []
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
-        from progressbar import ShowProcess
+        from ProgressBar import ShowProcess
         bar = ShowProcess(epoch * len(train_set) / batch_size)
         for t in range(epoch):
             for step, (b_x, b_y) in enumerate(train_loader):
