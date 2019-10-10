@@ -3,7 +3,6 @@ from random import shuffle  # mixing up or currently ordered data that might lea
 
 import cv2
 import numpy as np  # dealing with arrays
-
 from tqdm import tqdm  # a nice pretty percentage bar for tasks. Thanks to viewer Daniel Bühler for this suggestion
 
 TRAIN_DIR = './DogsVSCats/train'
@@ -49,4 +48,3 @@ def process_test_data(IMG_SIZE=64):
     # shuffle(testing_data)
     np.save('test_data.npy', testing_data)
     return testing_data
-

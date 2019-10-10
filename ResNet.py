@@ -4,6 +4,8 @@ from torch.nn import functional as F
 from CNNUtils import cal_conv2d, cal_maxpool2d
 
 LINEAR_OUTPUT = 8192
+
+
 class ResidualBlock(nn.Module):
     def __init__(self, inchannel, outchannel, stride=1, x=0):
         super(ResidualBlock, self).__init__()
@@ -33,9 +35,6 @@ class ResidualBlock(nn.Module):
 
     def get_x(self):
         return self.x
-
-
-
 
 
 class ResNet(nn.Module):
