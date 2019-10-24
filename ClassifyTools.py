@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from ProgressBar import ShowProcess
+from sklearn.metrics import accuracy_score
 
 
 class Classifier:
@@ -38,12 +39,15 @@ class Classifier:
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                bar.show_process()
+                msg = '，当前误差：%.5f' % loss.data.cpu().numpy()
+                bar.show_process(msg=msg)
         bar.close()
         print('\033[1;32m初始误差：\033[0m' + '\033[1;31m%.5f\033[0m' % list_y[0])
         print('\033[1;32m最终误差：\033[0m' + '\033[1;31m%.5f\033[0m' % list_y[-1])
         msg = str(type(self.nn))
-        msg += '\n solver=' + optim + ' epoch=' + str(epoch) + ' learning rate =' + str(lr)
+        msg += '\n solver=' + optim + \
+               ' epoch=' + str(epoch) + \
+               ' learning rate =' + str(lr) + ' batch=' + str(batch_size)
         plt.title(msg)
         plt.plot(list_x[10:], list_y[10:])
         plt.savefig('pic.png', bbox_inches='tight')
@@ -58,26 +62,37 @@ class Classifier:
         torch.save(self.nn, path)
 
     def evaluate(self, test_set, batch_size_test):
-        test_loader = DataLoader(test_set, batch_size=batch_size_test, shuffle=False)
+        test_loader = DataLoader(test_set, batch_size=1, shuffle=False)
         list_pred = []
         list_true = []
-        list_score = []
         for step, (t_x, t_y) in enumerate(test_loader):
+            print(t_x, t_y)
             t_x_t = t_x.cuda()
-            # t_x_t = t_x
             test_output = self.nn(t_x_t)
             pred_y = torch.max(test_output, 1)[1].data.cpu().numpy().squeeze()
             list_pred.append(pred_y)
             list_true.append(t_y)
-        from sklearn.metrics import accuracy_score
-        total_length = len(test_set)
-        iter_times = total_length / batch_size_test
-        final_score = 0
-        for i in range(int(iter_times)):
-            final_score += accuracy_score(y_true=list_true[i], y_pred=list_pred[i])
-        final_score /= iter_times
-        print('%.4f' % final_score)
-        return final_score
+        print(accuracy_score(y_true=list_true, y_pred=list_pred))
+
+    def evaluate2(self, X_test, Y_test, batch_size_test):
+        length = len(X_test)
+        list_pred = []
+        iter_times = length / batch_size_test
+        iter_times = int(iter_times)
+        i = 0
+        while i < iter_times:
+            t_x = torch.FloatTensor(X_test[i * batch_size_test:(i + 1) * batch_size_test])
+            t_x_t = t_x.cuda()
+            test_output = self.nn(t_x_t)
+            pred_y = torch.max(test_output, 1)[1].data.cpu().numpy().squeeze()
+            list_pred += pred_y.tolist()
+            i += 1
+        t_x = torch.FloatTensor(X_test[i * batch_size_test:])
+        t_x_t = t_x.cuda()
+        test_output = self.nn(t_x_t)
+        pred_y = torch.max(test_output, 1)[1].data.cpu().numpy().squeeze()
+        list_pred += pred_y.tolist()
+        print(accuracy_score(y_true=Y_test, y_pred=list_pred))
 
     def fit_with_LBFGS(self, train_set, batch_size, loss_func, epoch, lr):
         optimizer = torch.optim.LBFGS(self.nn.parameters(), lr=lr)
@@ -125,3 +140,12 @@ class Classifier:
             pred_y = torch.max(test_output, 1)[1].data.cpu().numpy().squeeze()
             list_pred += pred_y.tolist()
         return list_pred
+
+    def save_model_dicts(self, path):
+        torch.save(self.nn.state_dict(), path)
+
+    def load_model_dicts(self, path, c):
+        self.nn = c
+        self.nn.load_state_dict(torch.load(path))
+        self.nn.eval()
+        self.nn.cuda()

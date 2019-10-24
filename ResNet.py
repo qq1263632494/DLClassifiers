@@ -3,7 +3,7 @@ from torch.nn import functional as F
 
 from CNNUtils import cal_conv2d, cal_maxpool2d
 
-LINEAR_OUTPUT = 8192
+LINEAR_OUTPUT = 6400
 
 
 class ResidualBlock(nn.Module):
@@ -13,6 +13,7 @@ class ResidualBlock(nn.Module):
         self.left = nn.Sequential(
             nn.Conv2d(inchannel, outchannel, kernel_size=3, stride=stride, padding=1, bias=False),
             nn.BatchNorm2d(outchannel),
+            nn.Dropout(0.1),
             nn.ReLU(inplace=True),
             nn.Conv2d(outchannel, outchannel, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(outchannel)
@@ -59,7 +60,10 @@ class ResNet(nn.Module):
                 # print(self.INPUT_SIZE)
                 self.layers = nn.Sequential(*layer)
                 self.pool = nn.MaxPool2d(kernel_size=2)
-                self.fc = nn.Linear(LINEAR_OUTPUT, num_classes)
+                self.fc = nn.Sequential(
+                    nn.Dropout(0.1),
+                    nn.Linear(LINEAR_OUTPUT, num_classes),
+                    nn.Softmax())
 
     def make_layer(self, block, channels, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)  # strides=[1,1]

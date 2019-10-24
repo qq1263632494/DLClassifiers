@@ -22,7 +22,7 @@ class ShowProcess:
 
     # 显示函数，根据当前的处理进度i显示进度
     # 效果为[>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>]100.00%
-    def show_process(self, i=None):
+    def show_process(self, i=None, msg=None):
         if i is not None:
             self.i = i
         else:
@@ -34,7 +34,7 @@ class ShowProcess:
         time_message = '，预计还有：' + '%.5f' % time_predict + '秒'
         time_message = '\033[1;33m' + time_message + '\033[0m'
         process_bar = '\033[1;35m[\033[0m' + '\033[1;31m>\033[0m' * num_arrow + ' ' * num_line + '\033[1;35m]\033[0m' \
-                      + '\033[1;33m%.2f\033[0m' % percent + '\033[1;33m%\033[0m' + time_message + '\r'  # 带输出的字符串，'\r'表示不换行回到最左边
+                      + '\033[1;33m%.2f\033[0m' % percent + '\033[1;33m%\033[0m' + time_message + msg + '\r'  # 带输出的字符串，'\r'表示不换行回到最左边
         sys.stdout.write(process_bar)  # 这两句打印字符到终端
         sys.stdout.flush()
         self.last_time = time.time()
